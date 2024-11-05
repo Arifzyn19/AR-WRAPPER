@@ -1,6 +1,6 @@
 {
   "name": "@arifzyn/api",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Simple API Wrapper For Arifzyn API",
   "exports": {
     ".": {
