@@ -1,7 +1,7 @@
-import { AxiosInstance } from 'axios';
+import { AxiosInstance } from "axios";
 
 export interface APIOptions {
-	apikey: string;
+  apikey: string;
   headers?: Record<string, string>;
   [key: string]: any;
 }

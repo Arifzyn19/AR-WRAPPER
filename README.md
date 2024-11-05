@@ -35,13 +35,13 @@ You can import the package in both CommonJS and ES module formats.
 ## CommonJS
 
 ```javascript
-const API = require('@arifzyn/api');
+const API = require("@arifzyn/api");
 ```
 
 ## ES Modules
 
 ```javascript
-import API from '@arifzyn/api';
+import API from "@arifzyn/api";
 ```
 
 ## Example Usage
@@ -49,44 +49,47 @@ import API from '@arifzyn/api';
 1. Initialize the API Wrapper
 
 ```javascript
-const api = new API('https://api.arifzyn.tech', {
-  apikey: 'YOUR_API_KEY' // Optional, if your API requires an API key
+const api = new API("https://api.arifzyn.tech", {
+  apikey: "YOUR_API_KEY", // Optional, if your API requires an API key
 });
 ```
 
 2. GET Request Example
 
 ```javascript
-api.get('/endpoint', { param1: 'value1', param2: 'value2' })
-  .then(response => {
-    console.log('Response:', response);
+api
+  .get("/endpoint", { param1: "value1", param2: "value2" })
+  .then((response) => {
+    console.log("Response:", response);
   })
-  .catch(error => {
-    console.error('Error:', error);
+  .catch((error) => {
+    console.error("Error:", error);
   });
 ```
 
 3. POST Request Example
 
 ```javascript
-api.post('/endpoint', { key1: 'value1', key2: 'value2' })
-  .then(response => {
-    console.log('Response:', response);
+api
+  .post("/endpoint", { key1: "value1", key2: "value2" })
+  .then((response) => {
+    console.log("Response:", response);
   })
-  .catch(error => {
-    console.error('Error:', error);
+  .catch((error) => {
+    console.error("Error:", error);
   });
 ```
 
 4. GET Feature By Category
 
 ```javascript
-api.list('ai')
-  .then(response => {
-    console.log('Response:', response);
+api
+  .list("ai")
+  .then((response) => {
+    console.log("Response:", response);
   })
-  .catch(error => {
-    console.error('Error:', error);
+  .catch((error) => {
+    console.error("Error:", error);
   });
 ```
 
@@ -146,6 +149,6 @@ For any issues, please open a GitHub issue.
 
 Feel free to customize this README as needed or add more details if required.
 
-### Thanks To 
+### Thanks To
 
 A huge thank you to [neoxr on GitHub](https://github.com/neoxr). Your work has been a true source of inspiration and guidance. The quality and creativity of your contributions have pushed me to think bigger and aim higher in my own projects. Thank you for sharing your talent and insights with the AR-API impact is greatly appreciated.
