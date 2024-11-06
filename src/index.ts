@@ -7,8 +7,8 @@ export class ArifzynAPI {
   private api: API;
   private featuresByCategory: Record<string, Feature[]> = {}; // Organize features by category
 
-  constructor(apikey: string) {
-    this.api = new API(BASE_URL, { apikey });
+  constructor(apikey: string, url: string) {
+    this.api = new API(url ? url : BASE_URL, { apikey });
   }
 
   private async initializeFeatures() {
