@@ -1,7 +1,7 @@
 {
-  "name": "",
-  "version": "0.0.1",
-  "description": "Simple Typescript Template",
+  "name": "@arifzyn/api",
+  "version": "2.0.1",
+  "description": "Simple Wrapper From Arifzyn API.",
   "exports": {
     ".": {
       "import": "./dist/esm/index.js",
@@ -23,19 +23,43 @@
     "build:types": "tsc -p tsconfig.types.json",
     "fix": "fix-esm-import-path dist/esm",
     "build:all": "npm run clean && npm run build:esm && npm run build:cjs && npm run build:types && npm run fix && node scripts/write-package.js",
-    "prepare": "npm run build:all"
+    "prepare": "npm run build:all",
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/__tests__/**/*.test.ts"
+    ]
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Arifzyn19/ts-template"
+    "url": "git+https://github.com/Arifzyn19/AR-WRAPPER"
   },
-  "keywords": [],
+  "keywords": [
+    "arifzyn",
+    "api",
+    "api-client",
+    "rest-api",
+    "http-client",
+    "typescript",
+    "axios",
+    "rest",
+    "client",
+    "api-wrapper",
+    "http",
+    "web-api",
+    "promise",
+    "async"
+  ],
   "author": "Arifzyn19",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Arifzyn19/ts-template/issues"
+    "url": "https://github.com/Arifzyn19/AR-WRAPPER/issues"
   },
-  "homepage": "https://github.com/Arifzyn19/ts-template",
+  "homepage": "https://github.com/Arifzyn19/AR-WRAPPER",
   "devDependencies": {
     "@types/node": "^20.12.7",
     "@typescript-eslint/eslint-plugin": "^5.53.0",
