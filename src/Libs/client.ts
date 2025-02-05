@@ -3,9 +3,8 @@
  * Github : https://github.com/Arifzyn19
  */
 
-import axios, { AxiosInstance, AxiosRequestConfig, ResponseType } from "axios";
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { ApiResponse, ArifzynConfig, Endpoint, HttpMethod } from "../Types";
-import { Readable } from "stream";
 
 export class ArifzynAPI {
   private client: AxiosInstance;
@@ -16,7 +15,7 @@ export class ArifzynAPI {
       baseURL: "https://api.arifzyn.site",
       timeout: 30000,
       ...config,
-    };
+    }; 
 
     this.client = axios.create({
       baseURL: this.config.baseURL,
@@ -26,74 +25,60 @@ export class ArifzynAPI {
             "x-api-key": `${this.config.apiKey}`,
           }
         : undefined,
+      responseType: 'arraybuffer',    
     });
   }
 
   /**
-   * Detects if the endpoint is likely to return media content
+   * Detect response type from Axios response
+   * @param response - Axios response object
+   * @returns ResponseType - Returns type of response (buffer, json, text, etc)
    */
-  private isMediaEndpoint(endpoint: string): boolean {
-    const mediaExtensions = [
-      '.jpg', '.jpeg', '.png', '.gif', '.mp4', 
-      '.mp3', '.pdf', '.doc', '.docx', '.xls', 
-      '.xlsx', '.zip', '.rar'
-    ];
-    return mediaExtensions.some(ext => 
-      endpoint.toLowerCase().includes(ext) || 
-      endpoint.toLowerCase().includes('download') ||
-      endpoint.toLowerCase().includes('media')
-    );
+  private isBufferResponse(response: AxiosResponse): boolean {
+    const contentType = response.headers['content-type'];
+    return !contentType?.includes('application/json');
   }
-
+  
   /**
-   * Gets appropriate response type based on content type
+   * Process response based on content type
+   * @param response - Axios response object
+   * @returns Processed response (Buffer or JSON)
    */
-  private getResponseType(contentType?: string): ResponseType {
-    if (!contentType) return 'json';
+  private processResponse<T>(response: AxiosResponse): ApiResponse<T> | Buffer {
+    if (this.isBufferResponse(response)) {
+      return Buffer.from(response.data);
+    }
     
-    if (contentType.includes('application/json')) return 'json';
-    if (contentType.includes('text')) return 'text';
-    if (contentType.includes('stream')) return 'stream';
-    return 'arraybuffer';
+    const textDecoder = new TextDecoder('utf-8');
+    const jsonString = textDecoder.decode(response.data);
+    return JSON.parse(jsonString);
   }
-
+  
   /**
    * Universal method to call any endpoint with any HTTP method
+   * @param endpoint - API endpoint path
+   * @param method - HTTP method (GET, POST, etc)
+   * @param data - Request data (body for POST/PUT, query params for GET)
+   * @param config - Optional axios config
    */
   async call<T = any>(
     endpoint: string,
     method: HttpMethod = "GET",
     data?: Record<string, any>,
     config?: Partial<AxiosRequestConfig>,
-    returnBuffer: boolean = false
   ): Promise<ApiResponse<T> | Buffer> {
     try {
       const path = endpoint.startsWith("/") ? endpoint.slice(1) : endpoint;
-      
-      const isMedia = this.isMediaEndpoint(endpoint) || returnBuffer;
-      
+
       const requestConfig: AxiosRequestConfig = {
         ...config,
         method,
         url: path,
         ...(method === "GET" ? { params: data } : { data }),
-        responseType: isMedia ? 'arraybuffer' : 'json',
       };
 
       const response = await this.client.request(requestConfig);
-      
-      if (isMedia) {
-        const contentType = response.headers['content-type'];
-        
-        if (contentType?.includes('application/json')) {
-          const textDecoder = new TextDecoder('utf-8');
-          return JSON.parse(textDecoder.decode(response.data));
-        }
-        
-        return Buffer.from(response.data);
-      }
-
-      return response.data;
+      return this.processResponse<T>(response);
     } catch (error) {
       if (axios.isAxiosError(error)) {
         throw new Error(`API Error: ${error.message}`);
@@ -108,28 +93,18 @@ export class ArifzynAPI {
   async get<T = any>(
     endpoint: string,
     params?: Record<string, any>,
-    returnBuffer: boolean = false
   ): Promise<ApiResponse<T> | Buffer> {
-    return this.call(endpoint, "GET", params, undefined, returnBuffer);
+    return this.call(endpoint, "GET", params);
   }
 
   /**
-   * Helper method for POST requests with media upload support
+   * Helper method for POST requests
    */
   async post<T = any>(
     endpoint: string,
-    data?: Record<string, any> | FormData,
-    returnBuffer: boolean = false
+    data?: Record<string, any>,
   ): Promise<ApiResponse<T> | Buffer> {
-    const config: Partial<AxiosRequestConfig> = {};
-    
-    if (data instanceof FormData) {
-      config.headers = {
-        'Content-Type': 'multipart/form-data'
-      };
-    }
-    
-    return this.call(endpoint, "POST", data, config, returnBuffer);
+    return this.call(endpoint, "POST", data);
   }
 
   /**
@@ -138,9 +113,8 @@ export class ArifzynAPI {
   async put<T = any>(
     endpoint: string,
     data?: Record<string, any>,
-    returnBuffer: boolean = false
   ): Promise<ApiResponse<T> | Buffer> {
-    return this.call(endpoint, "PUT", data, undefined, returnBuffer);
+    return this.call(endpoint, "PUT", data);
   }
 
   /**
@@ -149,54 +123,8 @@ export class ArifzynAPI {
   async delete<T = any>(
     endpoint: string,
     params?: Record<string, any>,
-    returnBuffer: boolean = false
   ): Promise<ApiResponse<T> | Buffer> {
-    return this.call(endpoint, "DELETE", params, undefined, returnBuffer);
-  }
-
-  /**
-   * Upload file using FormData
-   */
-  async uploadFile(
-    endpoint: string,
-    file: Buffer | string,
-    filename: string,
-    additionalData?: Record<string, any>
-  ): Promise<ApiResponse<any>> {
-    const formData = new FormData();
-    
-    // Add file to FormData
-    if (file instanceof Buffer) {
-      // Convert Buffer to Uint8Array for Blob creation
-      const blob = new Blob([new Uint8Array(file)]);
-      formData.append('file', blob, filename);
-    } else {
-      formData.append('file', file, filename);
-    }
-    
-    // Add additional data if provided
-    if (additionalData) {
-      Object.entries(additionalData).forEach(([key, value]) => {
-        formData.append(key, String(value));
-      });
-    }
-    
-    const response = await this.post(endpoint, formData);
-    if ('result' in response) {
-      return response as ApiResponse<any>;
-    }
-    throw new Error('Unexpected response format');
-  }
-
-  /**
-   * Download file and return as Buffer
-   */
-  async downloadFile(endpoint: string): Promise<Buffer> {
-    const response = await this.get(endpoint, undefined, true);
-    if (response instanceof Buffer) {
-      return response;
-    }
-    throw new Error('Failed to download file');
+    return this.call(endpoint, "DELETE", params);
   }
 
   /**
@@ -204,10 +132,10 @@ export class ArifzynAPI {
    */
   async getEndpoints(): Promise<Endpoint[]> {
     const response = await this.get<Endpoint[]>("endpoint");
-    if ('result' in response) {
-      return response.result;
+    if (Buffer.isBuffer(response)) {
+      throw new Error("Unexpected buffer response");
     }
-    throw new Error('Unexpected response format');
+    return response.result;
   }
 
   /**
